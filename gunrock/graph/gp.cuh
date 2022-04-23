@@ -136,12 +136,12 @@ struct Gp : public GraphBase<_VertexT, _SizeT, _ValueT, _FLAG | HAS_GP,
   else
         fprintf(stderr, "in Gp::Allocate, targeting unknown\n");
 
-    retval = BaseGraph ::Allocate(nodes, edges, target);
+    retval = BaseGraph ::Allocate(nodes, edges, target | util::HOST);
     if (retval) return retval;
-    retval = partition_table.Allocate(nodes, target);
+    retval = partition_table.Allocate(nodes, target | util::HOST);
     if (retval) return retval;
     if ((flag & partitioner::Keep_Node_Num) == 0) {
-      retval = convertion_table.Allocate(nodes, target);
+      retval = convertion_table.Allocate(nodes, target | util::HOST);
       if (retval) return retval;
     }
 
@@ -151,17 +151,17 @@ struct Gp : public GraphBase<_VertexT, _SizeT, _ValueT, _FLAG | HAS_GP,
     // if (retval = out_counter     .Allocate(num_subgraphs, target))
     //    return retval;
     if (flag & partitioner::Use_Original_Vertex) {
-      retval = original_vertex.Allocate(nodes, target);
+      retval = original_vertex.Allocate(nodes, target | util::HOST);
       if (retval) return retval;
     }
     if (flag & partitioner::Enable_Backward) {
-      retval = backward_offset.Allocate(nodes + 1, target);
+      retval = backward_offset.Allocate(nodes + 1, target | util::HOST);
       if (retval) return retval;
-      retval = backward_partition.Allocate(in_counter[num_subgraphs], target);
+      retval = backward_partition.Allocate(in_counter[num_subgraphs], target | util::HOST);
       if (retval) return retval;
       if ((flag & partitioner::Keep_Node_Num) == 0)
         retval =
-            backward_convertion.Allocate(in_counter[num_subgraphs], target);
+            backward_convertion.Allocate(in_counter[num_subgraphs], target | util::HOST);
       if (retval) return retval;
     }
     return retval;

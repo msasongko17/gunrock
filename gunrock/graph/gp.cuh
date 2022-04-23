@@ -129,6 +129,13 @@ struct Gp : public GraphBase<_VertexT, _SizeT, _ValueT, _FLAG | HAS_GP,
     cudaError_t retval = cudaSuccess;
     if (num_subgraphs == 1) return retval;
 
+    if(target == util::DEVICE)
+        fprintf(stderr, "in Gp::Allocate, targeting device\n");
+  else if(target == util::HOST)
+        fprintf(stderr, "in Gp::Allocate, targeting host\n");
+  else
+        fprintf(stderr, "in Gp::Allocate, targeting unknown\n");
+
     retval = BaseGraph ::Allocate(nodes, edges, target);
     if (retval) return retval;
     retval = partition_table.Allocate(nodes, target);

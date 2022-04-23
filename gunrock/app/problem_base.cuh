@@ -225,9 +225,21 @@ struct ProblemBase {
     if (num_gpus == 1)
       sub_graphs.SetPointer(&graph, 1, util::HOST);
     else {
+      if(target == util::DEVICE)
+        	fprintf(stderr, "in ProblemBase::Init before sub_graphs.Allocate, targeting device\n");
+  	else if(target == util::HOST)
+        	fprintf(stderr, "in ProblemBase::Init before sub_graphs.Allocate, targeting host\n");
+  	else
+        	fprintf(stderr, "in ProblemBase::Init before sub_graphs.Allocate, targeting unknown\n"); 
       retval = sub_graphs.Allocate(num_gpus, target | util::HOST);
       if (retval) return retval;
       GraphT *t_subgraphs = sub_graphs + 0;
+	if(target == util::DEVICE)
+                fprintf(stderr, "in ProblemBase::Init before gunrock::partitioner::Partition, targeting device\n");
+        else if(target == util::HOST)
+                fprintf(stderr, "in ProblemBase::Init before gunrock::partitioner::Partition, targeting host\n");
+        else
+                fprintf(stderr, "in ProblemBase::Init before gunrock::partitioner::Partition, targeting unknown\n");	
       retval = gunrock::partitioner::Partition(graph, t_subgraphs, parameters,
                                                num_gpus, flag, target);
       if (retval) return retval;

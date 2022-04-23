@@ -86,6 +86,12 @@ cudaError_t RunTests(util::Parameters &parameters, GraphT &graph,
   // Allocate problem and enactor on GPU, and initialize them
   ProblemT problem(parameters);
   EnactorT enactor;
+  if(target == util::DEVICE)
+	fprintf(stderr, "in RunTests, targeting device\n");
+  else if(target == util::HOST)
+	fprintf(stderr, "in RunTests, targeting host\n");
+  else
+	fprintf(stderr, "in RunTests, targeting unknown\n");
   GUARD_CU(problem.Init(graph, target));
   GUARD_CU(enactor.Init(problem, target));
   cpu_timer.Stop();

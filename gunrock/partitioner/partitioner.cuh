@@ -67,6 +67,13 @@ cudaError_t Partition(GraphT &org_graph, GraphT *&sub_graphs,
   std::string partition_method =
       parameters.Get<std::string>("partition-method");
 
+  if(target == util::DEVICE)
+        fprintf(stderr, "in gunrock::partitioner::Partition before Allocate, targeting device\n");
+  else if(target == util::HOST)
+        fprintf(stderr, "in gunrock::partitioner::Partition before Allocate, targeting host\n");
+  else
+        fprintf(stderr, "in gunrock::partitioner::Partition before Allocate, targeting unknown\n"); 
+
   retval =
       org_graph.GpT::Allocate(org_graph.nodes, org_graph.edges, num_subgraphs,
                               flag & Org_Graph_Mark, target);

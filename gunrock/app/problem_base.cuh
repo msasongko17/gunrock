@@ -242,6 +242,7 @@ struct ProblemBase {
                 fprintf(stderr, "in ProblemBase::Init before gunrock::partitioner::Partition, targeting unknown\n");	
       retval = gunrock::partitioner::Partition(graph, t_subgraphs, parameters,
                                                num_gpus, flag, target);
+      fprintf(stderr, "Partition is done in ProblemBase::Init\n");
       if (retval) return retval;
     }
 

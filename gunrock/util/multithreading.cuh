@@ -101,7 +101,9 @@ void cutDestroyThread(CUTThread thread) {
 
 // Wait for multiple threads
 void cutWaitForThreads(const CUTThread *threads, int num) {
+  fprintf(stderr, "in cutWaitForThreads 1, before WaitForMultipleObjects\n");
   WaitForMultipleObjects(num, threads, true, INFINITE);
+  fprintf(stderr, "in cutWaitForThreads 2, after WaitForMultipleObjects\n");
 
   for (int i = 0; i < num; i++) {
     CloseHandle(threads[i]);
@@ -156,9 +158,11 @@ inline void cutDestroyThread(CUTThread thread) { pthread_cancel(thread); }
 
 // Wait for multiple threads
 inline void cutWaitForThreads(const CUTThread *threads, int num) {
+  fprintf(stderr, "in cutWaitForThreads 2, before loop\n");
   for (int i = 0; i < num; i++) {
     cutEndThread(threads[i]);
   }
+  fprintf(stderr, "in cutWaitForThreads 2, after loop\n");
 }
 
 // Create barrier.

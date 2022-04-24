@@ -313,10 +313,12 @@ class EnactorBase {
       unsigned int num_queues = 2, FrontierType *frontier_types = NULL,
       util::Location target = util::DEVICE,
       bool skip_makeout_selection = false) {
+    fprintf(stderr, "in EnactorBase::Init, marker 1\n");
     typedef typename GraphT::GpT GpT;
     cudaError_t retval = cudaSuccess;
     util::Parameters &parameters = problem.parameters;
     GraphT *sub_graphs = problem.sub_graphs + 0;
+    fprintf(stderr, "in EnactorBase::Init, marker 2\n");
 
     gpu_idx = parameters.Get<std::vector<int>>("device");
     num_gpus = gpu_idx.size();
@@ -342,6 +344,7 @@ class EnactorBase {
     if (parameters.Get<bool>("size-check")) flag = flag | Size_Check;
     this->flag = flag;
 
+    fprintf(stderr, "in EnactorBase::Init, marker 3\n");
     GUARD_CU(cuda_props.Allocate(num_gpus, util::HOST));
     GUARD_CU(enactor_slices.Allocate(num_gpus * num_gpus, util::HOST));
     GUARD_CU(mgpu_slices.Allocate(num_gpus, util::HOST));
@@ -371,6 +374,7 @@ class EnactorBase {
       for (int peer = 0; peer < num_gpus; peer++) {
         auto &enactor_slice = enactor_slices[gpu * num_gpus + peer];
 
+        fprintf(stderr, "in EnactorBase::Init, marker 4 GPU %d connecting with GPU %d\n", gpu, peer);
         GUARD_CU(
             enactor_slice.Init(num_queues, frontier_types,
                                algo_name + "::frontier[" + std::to_string(gpu) +
@@ -378,6 +382,7 @@ class EnactorBase {
                                /*node_lock_size,*/ target, cuda_props + gpu,
                                advance_mode, filter_mode, max_grid_size));
 
+	fprintf(stderr, "in EnactorBase::Init, marker 5 GPU %d connecting with GPU %d\n", gpu, peer);
         if (gpu != peer && (target & util::DEVICE) != 0) {
           int peer_access_avail;
           GUARD_CU2(cudaDeviceCanAccessPeer(&peer_access_avail, gpu_idx[gpu],
@@ -394,11 +399,13 @@ class EnactorBase {
       auto &sub_graph = sub_graphs[gpu];
       mgpu_slice.max_num_vertex_associates = max_num_vertex_associates;
       mgpu_slice.max_num_value__associates = max_num_value__associates;
+      fprintf(stderr, "in EnactorBase::Init, marker 6 GPU %d\n", gpu);
       GUARD_CU(mgpu_slice.Init(num_gpus, gpu_idx[gpu], sub_graph.nodes,
                                sub_graph.nodes * queue_factors[0],
                                sub_graph.GpT::in_counter + 0,
                                sub_graph.GpT::out_counter + 0, trans_factor,
                                skip_makeout_selection));
+      fprintf(stderr, "in EnactorBase::Init, marker 7 GPU %d\n", gpu);
 
 #ifdef ENABLE_PERFORMANCE_PROFILING
       iter_sub_queue_time[gpu].clear();

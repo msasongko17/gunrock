@@ -376,6 +376,7 @@ cudaError_t MakeSubGraph(GraphT &org_graph, GraphT *&sub_graphs,
                          util::Parameters &parameters, int num_subgraphs = 1,
                          PartitionFlag flag = PARTITION_NONE,
                          util::Location target = util::HOST) {
+  fprintf(stderr, "in MakeSubGraph, marker 0\n");
   cudaError_t retval = cudaSuccess;
   ThreadSlice<GraphT> *thread_data = new ThreadSlice<GraphT>[num_subgraphs];
   CUTThread *thread_Ids = new CUTThread[num_subgraphs];
@@ -383,6 +384,7 @@ cudaError_t MakeSubGraph(GraphT &org_graph, GraphT *&sub_graphs,
       util::cpu_mt::CreateBarrier(num_subgraphs);
   if (sub_graphs == NULL) sub_graphs = new GraphT[num_subgraphs];
 
+  fprintf(stderr, "in MakeSubGraph, marker 1\n");
   for (int i = 0; i < num_subgraphs; i++) {
     thread_data[i].org_graph = &org_graph;
     thread_data[i].sub_graph = sub_graphs + i;
@@ -398,9 +400,11 @@ cudaError_t MakeSubGraph(GraphT &org_graph, GraphT *&sub_graphs,
         (void *)(thread_data + i));
     thread_Ids[i] = thread_data[i].thread_Id;
   }
+  fprintf(stderr, "in MakeSubGraph, marker 2\n");
 
   cutWaitForThreads(thread_Ids, num_subgraphs);
 
+  fprintf(stderr, "in MakeSubGraph, marker 3\n");
   util::cpu_mt::DestoryBarrier(&cpu_barrier);
   delete[] thread_Ids;
   thread_Ids = NULL;

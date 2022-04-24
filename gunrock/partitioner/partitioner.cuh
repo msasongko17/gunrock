@@ -91,6 +91,7 @@ cudaError_t Partition(GraphT &org_graph, GraphT *&sub_graphs,
   }
   for (int i = 0; i < num_subgraphs; i++) weitage[i + 1] += weitage[i];
 
+  fprintf(stderr, "before Partitioning\n");
   util::Location target_ = util::HOST;
   if (partition_method == "random")
     retval = random::Partition(org_graph, sub_graphs, parameters, num_subgraphs,
@@ -114,14 +115,17 @@ cudaError_t Partition(GraphT &org_graph, GraphT *&sub_graphs,
     retval = util::GRError(cudaErrorUnknown,
                            "Unknown partitioning method " + partition_method,
                            __FILE__, __LINE__);
+  fprintf(stderr, "after Partitioning\n");
   if (retval) return retval;
 
   if (weitage_allocated) {
     delete[] weitage;
     weitage = NULL;
   }
+  fprintf(stderr, "before MakeSubGraph\n");
   retval = MakeSubGraph(org_graph, sub_graphs, parameters, num_subgraphs, flag,
                         target);
+  fprintf(stderr, "after MakeSubGraph\n");
   if (retval) return retval;
   return retval;
 }

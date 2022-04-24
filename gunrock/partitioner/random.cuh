@@ -41,7 +41,9 @@ cudaError_t Partition(GraphT &org_graph, GraphT *&sub_graphs,
   typedef typename GraphT::GpT GpT;
 
   cudaError_t retval = cudaSuccess;
+  fprintf(stderr, "marker 1\n");
   auto &partition_table = org_graph.GpT::partition_table;
+  fprintf(stderr, "marker 2\n");
   SizeT nodes = org_graph.nodes;
   util::Array1D<SizeT, SortNode<SizeT, long int> > sort_list;
   sort_list.SetName("partitioner::random::sort_list");
@@ -54,7 +56,9 @@ cudaError_t Partition(GraphT &org_graph, GraphT *&sub_graphs,
     util::PrintMsg("Random partition begin. seed = " +
                    std::to_string(partition_seed));
 
+  fprintf(stderr, "marker 3\n");
   retval = sort_list.Allocate(nodes, target);
+  fprintf(stderr, "marker 4\n");
   if (retval) return retval;
 
 #pragma omp parallel
@@ -76,6 +80,7 @@ cudaError_t Partition(GraphT &org_graph, GraphT *&sub_graphs,
 
   util::omp_sort(sort_list + 0, nodes, Compare_SortNode<SizeT, long int>);
 
+  fprintf(stderr, "marker 5\n");
   for (int i = 0; i < num_subgraphs; i++) {
     SizeT begin_pos = (i == 0 ? 0 : weitage[i - 1] * nodes);
     SizeT end_pos = weitage[i] * nodes;
@@ -83,6 +88,7 @@ cudaError_t Partition(GraphT &org_graph, GraphT *&sub_graphs,
       partition_table[sort_list[pos].posit] = i;
   }
 
+  fprintf(stderr, "marker 6\n");
   if (retval = sort_list.Release()) return retval;
 
   return retval;

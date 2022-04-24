@@ -93,7 +93,9 @@ cudaError_t RunTests(util::Parameters &parameters, GraphT &graph,
   else
 	fprintf(stderr, "in RunTests, targeting unknown\n");
   GUARD_CU(problem.Init(graph, target));
+  fprintf(stderr, "after problem.Init\n");
   GUARD_CU(enactor.Init(problem, target));
+  fprintf(stderr, "after enactor.Init\n");
   cpu_timer.Stop();
   parameters.Set("preprocess-time", cpu_timer.ElapsedMillis());
 

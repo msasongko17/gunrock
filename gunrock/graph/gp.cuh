@@ -151,17 +151,17 @@ struct Gp : public GraphBase<_VertexT, _SizeT, _ValueT, _FLAG | HAS_GP,
     // if (retval = out_counter     .Allocate(num_subgraphs, target))
     //    return retval;
     if (flag & partitioner::Use_Original_Vertex) {
-      retval = original_vertex.Allocate(nodes, target | util::HOST);
+      retval = original_vertex.Allocate(nodes, target);
       if (retval) return retval;
     }
     if (flag & partitioner::Enable_Backward) {
-      retval = backward_offset.Allocate(nodes + 1, target | util::HOST);
+      retval = backward_offset.Allocate(nodes + 1, target);
       if (retval) return retval;
-      retval = backward_partition.Allocate(in_counter[num_subgraphs], target | util::HOST);
+      retval = backward_partition.Allocate(in_counter[num_subgraphs], target);
       if (retval) return retval;
       if ((flag & partitioner::Keep_Node_Num) == 0)
         retval =
-            backward_convertion.Allocate(in_counter[num_subgraphs], target | util::HOST);
+            backward_convertion.Allocate(in_counter[num_subgraphs], target);
       if (retval) return retval;
     }
     return retval;

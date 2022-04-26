@@ -98,6 +98,7 @@ struct CsrSwitch<GraphT, true> {
     typedef typename GraphT::CsrT CsrT;
     typedef typename GraphT::GpT GpT;
 
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 1\n");
     ThreadSlice<GraphT> *thread_data = (ThreadSlice<GraphT> *)thread_data_;
     GraphT *org_graph = thread_data->org_graph;
     GraphT *sub_graph = thread_data->sub_graph;
@@ -108,6 +109,8 @@ struct CsrSwitch<GraphT, true> {
     PartitionFlag flag = thread_data->partition_flag;
     cudaError_t &retval = thread_data->retval;
 
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 2, thread num: %d\n", thread_num);
+
     auto &org_partition_table = org_graph->GpT::partition_table;
     auto &org_convertion_table = org_graph->GpT::convertion_table;
     auto &partition_table = sub_graph->GpT::partition_table;
@@ -115,6 +118,8 @@ struct CsrSwitch<GraphT, true> {
     // int**           partition_tables      = thread_data->partition_tables;
     auto &convertion_table = sub_graph->GpT::convertion_table;
     auto &original_vertex = sub_graph->GpT::original_vertex;
+
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 3, thread num: %d\n", thread_num);
 
     auto &backward_partition = sub_graph->GpT::backward_partition;
     auto &backward_convertion = sub_graph->GpT::backward_convertion;
@@ -133,11 +138,15 @@ struct CsrSwitch<GraphT, true> {
     SizeT in_counter_ = 0;
     util::Location target = util::HOST;
 
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 3, thread num: %d\n", thread_num);
+
     marker.SetName("partitioner::marker");
     tconvertion_table.SetName("partitioner::tconvertion_table");
     tout_counter.SetName("partitioner::tout_counter");
     util::PrintMsg("Thread " + std::to_string(thread_num) + ", 1");
     retval = cudaSuccess;
+
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 4, thread num: %d\n", thread_num);
 
     retval = marker.Allocate(org_graph->nodes, target);
     if (retval) CUT_THREADEND;
@@ -151,20 +160,30 @@ struct CsrSwitch<GraphT, true> {
     retval = out_offset.Allocate(num_subgraphs + 1, target);
     if (retval) CUT_THREADEND;
 
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 5, thread num: %d\n", thread_num);
+
     memset(marker + 0, 0, sizeof(int) * org_graph->nodes);
     memset(out_counter + 0, 0, sizeof(SizeT) * (num_subgraphs + 1));
 
+
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 6, thread num: %d\n", thread_num);
+
     // util::PrintMsg("Thread " + std::to_string(thread_num) + ", 2");
     num_nodes = 0;
-    for (VertexT v = 0; v < org_graph->nodes; v++)
+    for (VertexT v = 0; v < org_graph->nodes; v++) {
+      //fprintf(stderr, "before org_partition_table is accessed\n");
       if (org_partition_table[v] == thread_num) {
         if (!keep_node_num) {
+          //fprintf(stderr, "before org_convertion_table is accessed\n");
           org_convertion_table[v] = out_counter[thread_num];
+	  //fprintf(stderr, "before tconvertion_table is accessed\n");
           tconvertion_table[v] = out_counter[thread_num];
+	  //fprintf(stderr, "after tconvertion_table is accessed\n");
         }
         marker[v] = 1;
         SizeT edge_start = org_graph->CsrT::row_offsets[v];
         SizeT edge_end = org_graph->CsrT::row_offsets[v + 1];
+	//fprintf(stderr, "before edge_start loop\n");
         for (SizeT edge = edge_start; edge < edge_end; edge++) {
           SizeT neighbour = org_graph->CsrT::column_indices[edge];
           int peer = org_partition_table[neighbour];
@@ -175,10 +194,14 @@ struct CsrSwitch<GraphT, true> {
             num_nodes++;
           }
         }
+	//fprintf(stderr, "after edge_start loop\n");
         out_counter[thread_num]++;
         num_nodes++;
         num_edges += edge_end - edge_start;
       }
+    }
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 7, thread num: %d\n", thread_num);
+
     retval = marker.Release();
     if (retval) CUT_THREADEND;
     // util::PrintMsg("Thread " + std::to_string(thread_num) + ", 3");
@@ -191,11 +214,14 @@ struct CsrSwitch<GraphT, true> {
       out_offset[peer_] = node_counter;
       node_counter += out_counter[peer];
     }
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 8, thread num: %d\n", thread_num);
     out_offset[num_subgraphs] = node_counter;
     // util::cpu_mt::PrintCPUArray<SizeT, SizeT>(
     //    "out_offsets", out_offsets[thread_num], num_subgraphs+1, thread_num);
     util::cpu_mt::IncrementnWaitBarrier(cpu_barrier, thread_num);
     // util::PrintMsg("Thread " + std::to_string(thread_num) + ", 4");
+
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 9, thread num: %d\n", thread_num);
 
     node_counter = 0;
     for (int peer = 0; peer < num_subgraphs; peer++) {
@@ -209,6 +235,8 @@ struct CsrSwitch<GraphT, true> {
     in_counter[num_subgraphs] = node_counter;
     // util::PrintMsg("Thread " + std::to_string(thread_num) + ", 5");
 
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 10, thread num: %d\n", thread_num);
+
     if (keep_node_num) num_nodes = org_graph->nodes;
     retval = sub_graph->CsrT::Allocate(num_nodes, num_edges, target);
     if (retval) CUT_THREADEND;
@@ -216,6 +244,7 @@ struct CsrSwitch<GraphT, true> {
                                       flag | Sub_Graph_Mark, target);
     if (retval) CUT_THREADEND;
 
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 11, thread num: %d\n", thread_num);
     if (flag & Enable_Backward) {
       if (keep_node_num)
         retval = marker.Allocate(num_subgraphs * org_graph->nodes, target);
@@ -236,6 +265,7 @@ struct CsrSwitch<GraphT, true> {
           }
         }
     }
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 12, thread num: %d\n", thread_num);
     // util::PrintMsg("Thread " + std::to_string(thread_num) + ", 6");
 
     edge_counter = 0;
@@ -284,6 +314,8 @@ struct CsrSwitch<GraphT, true> {
       }
     sub_graph->CsrT::row_offsets[num_nodes] = num_edges;
     // util::PrintMsg("Thread " + std::to_string(thread_num) + ", 7");
+
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 13, thread num: %d\n", thread_num);
 
     if (flag & Enable_Backward) {
       in_counter_ = 0;
@@ -336,6 +368,8 @@ struct CsrSwitch<GraphT, true> {
     }
     // util::PrintMsg("Thread " + std::to_string(thread_num) + ", 8");
 
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 14, thread num: %d\n", thread_num);
+ 
     out_counter[num_subgraphs] = 0;
     in_counter[num_subgraphs] = 0;
     for (int peer = 0; peer < num_subgraphs; peer++) {
@@ -360,6 +394,7 @@ struct CsrSwitch<GraphT, true> {
     // util::PrintMsg("Thread " + std::to_string(thread_num) + ", 9");
 
     retval = sub_graph->FromCsr(*sub_graph, true);
+    fprintf(stderr, "in MakeSubGraph_Thread, marker 15, thread num: %d\n", thread_num);
     if (retval) CUT_THREADEND;
 
     CUT_THREADEND;

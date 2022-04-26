@@ -141,7 +141,7 @@ struct Gp : public GraphBase<_VertexT, _SizeT, _ValueT, _FLAG | HAS_GP,
     retval = partition_table.Allocate(nodes, util::HOST);
     if (retval) return retval;
     if ((flag & partitioner::Keep_Node_Num) == 0) {
-      retval = convertion_table.Allocate(nodes, target);
+      retval = convertion_table.Allocate(nodes, util::HOST);
       if (retval) return retval;
     }
 

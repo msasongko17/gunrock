@@ -89,7 +89,9 @@ CUTThread cutStartThread(CUT_THREADROUTINE func, void *data) {
 
 // Wait for thread to finish
 void cutEndThread(CUTThread thread) {
+  fprintf(stderr, "before WaitForSingleObject\n");
   WaitForSingleObject(thread, INFINITE);
+  fprintf(stderr, "after WaitForSingleObject\n");
   CloseHandle(thread);
 }
 
@@ -151,18 +153,19 @@ inline CUTThread cutStartThread(CUT_THREADROUTINE func, void *data) {
 }
 
 // Wait for thread to finish
-inline void cutEndThread(CUTThread thread) { pthread_join(thread, NULL); }
+inline void cutEndThread(CUTThread thread) { fprintf(stderr, "before pthread_join\n");  pthread_join(thread, NULL); fprintf(stderr, "after pthread_join\n");}
 
 // Destroy thread
 inline void cutDestroyThread(CUTThread thread) { pthread_cancel(thread); }
 
 // Wait for multiple threads
 inline void cutWaitForThreads(const CUTThread *threads, int num) {
-  fprintf(stderr, "in cutWaitForThreads 2, before loop\n");
+  fprintf(stderr, "in cutWaitForThreads 2, before loop, thread count: %d\n", num);
   for (int i = 0; i < num; i++) {
+    fprintf(stderr, "thread %d is about to be ended\n", i);
     cutEndThread(threads[i]);
   }
-  fprintf(stderr, "in cutWaitForThreads 2, after loop\n");
+  fprintf(stderr, "in cutWaitForThreads 2, after loop, thread count: %d\n", num);
 }
 
 // Create barrier.
